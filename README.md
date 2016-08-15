@@ -11,7 +11,7 @@ Para mas indicaciones de las librerias puedes ingresa aquí: [Quick Start to Nod
 
 
 ## Configuración
-Cuando tengamos todo instalado en nuestro PC debemos quemas el Software utilizando el IDE de Arduino, luego de grabar el firmware debemos continuar los siguiente pasos:
+Cuando tengamos todo instalado en nuestro PC debemos quemar el Software utilizando el IDE de Arduino, luego de grabar el firmware debemos continuar los siguiente pasos:
 
 1. Abrir una consola serial o una terminal putty con una frecuencia de velocidad de 115200 baud. 
 2. Ingresar los datos de tu red de la siguiete forma SSID;PASSWORD;TOPIC, ejemplo **FamAlzate;111222333;temperatura**.
