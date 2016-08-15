@@ -16,43 +16,37 @@ const byte putRefPositive = 14; //D5
 const byte putRefNegative = 12;//D6
 const byte statusRefResponse = 13;//D7 
 
-boolean running = false;
+boolean isRunning  = false;
+boolean isRegister = false;
 
 //for dummy
 char buf[2];
 unsigned  long  randNumber;
-const char* pubTopic;
+String globalTopic;
 
 void setup() 
 {
   Serial.begin(115200);
   EEPROM.begin(512);
   delay(10);
+  
   client.setServer(mqtt_server, 1883);
+
+  settingPinMode();
+  settingWifi();
+}
+
+void settingPinMode()
+{
   
   pinMode(ledStatusSend, OUTPUT);
   pinMode(ledStatusOutService, OUTPUT);
   pinMode(ledStatusInService, OUTPUT);
   pinMode(putRefPositive, INPUT);
   pinMode(putRefNegative, INPUT);
-  pinMode(statusRefResponse, OUTPUT);
- 
-  settingWifi();
-  settingTopic();
+  pinMode(statusRefResponse, OUTPUT);  
 }
 
-void settingTopic()
-{
-  String topic;
-  for (int i = 42; i < 68; ++i){
-    char val = char(EEPROM.read(i));
-    if(val) {
-      topic+=char(EEPROM.read(i));
-    }
-  }
-  topic.trim();
-  pubTopic = topic.c_str();
-}
 
 void settingWifi()
 {
@@ -78,16 +72,22 @@ void settingWifi()
       epass.trim();
       
       WiFi.begin(esid.c_str(), epass.c_str());
-      if ( testWifi() == 20 ) { 
-         Serial.println("\nConnected");
-         running = true;
+      if ( isValidWifi() == 20 ) { 
+         Serial.print("\nConnected WIFI.");
+         settingTopic();
+         isRunning = true;
       } else {
-         Serial.println("\nNo Connected");
+         Serial.print("\nNo Connected.");
+         isRunning = false;
+         return;
       }
   } 
+
+  Serial.print("\nNo Connected.");
+  isRunning = false;
 }
 
-int testWifi(void) 
+int isValidWifi(void) 
 {
   int c = 0;
   Serial.println("Waiting for Wifi to connect");  
@@ -96,30 +96,50 @@ int testWifi(void)
       return(20); 
     } 
     delay(500);
-    Serial.print(WiFi.status());    
+    Serial.print(".");    
     c++;
   }
   Serial.println("\nConnect timed out");
   return(10);
 } 
 
+void settingTopic()
+{
+  globalTopic = "";
+  for (int i = 42; i < 68; ++i){
+    char val = char(EEPROM.read(i));
+    if(val) {
+      globalTopic+=char(EEPROM.read(i));
+    }
+  }
+  globalTopic.trim();
+}
+
 void reconnect() 
 {
- while (!client.connected()) {
- Serial.println("Server MQTT connection...");
- if (client.connect("ESP8266 Client")) {
-    Serial.println("connected");
-    digitalWrite(ledStatusOutService, LOW);
-    digitalWrite(ledStatusInService, HIGH);
- } else {
-    digitalWrite(ledStatusOutService, HIGH);
-    digitalWrite(ledStatusInService, LOW);
-    Serial.print("failed, rc=");
-    Serial.print(client.state());
-    Serial.println(" try again in 5 seconds");
-    delay(5000);
-  }
- }
+   Serial.print("\nServer MQTT connection");
+   while (!client.connected()) {
+     Serial.print(".");
+     if (client.connect("ESP8266 Client")) {
+        Serial.println(" Connected MQTT");
+        digitalWrite(ledStatusOutService, LOW);
+        digitalWrite(ledStatusInService, HIGH);
+
+        if(isRegister == false) {
+          isRegister = true;
+          publishRegister();
+          delay(1000);
+        } 
+        
+     } else {
+        digitalWrite(ledStatusOutService, HIGH);
+        digitalWrite(ledStatusInService, LOW);
+        Serial.print(" failed, rc=");
+        Serial.print(client.state());
+        Serial.println(" try again in 5 seconds");
+        delay(5000);
+      }
+   }
 }
 
 void loop() 
@@ -137,20 +157,23 @@ void loop()
         
     } 
 
-    if(running) {
+    if(isRunning) {
         if (!client.connected()) {
           reconnect();
         }
-        client.loop();
         
-        delay(10000);
-        publishData();  
+        client.loop();     
+        if(isRegister){
+          delay(10000);
+          publishData(); 
+          isRegister = true;
+        } 
     }
 }
 
 void cleanDataWifi()
 {
-   Serial.println("clearing eeprom");
+   Serial.println("Clearing eeprom");
    for (int i = 0; i < 68; ++i) { EEPROM.write(i, 0); }
    EEPROM.commit();  
 }
@@ -178,8 +201,17 @@ void saveWifiAndTopic(String ssid,  String password, String topic)
 void publishData()
 {
   sleepIntro();
-  client.publish(pubTopic, getSensor(), true);
+  char *val = getSensor();
+  Serial.print("\npublishData:" +pubTopic + "/");
+  Serial.println(val);
+  client.publish(pubTopic.c_str(),val, true);
   sleppOutput();
+}
+
+void publishRegister()
+{
+  Serial.print("\npublishRegister:" +pubTopic);
+  client.publish("register",pubTopic.c_str(), true);
 }
 
 
