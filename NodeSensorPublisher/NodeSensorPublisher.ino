@@ -84,8 +84,7 @@ void settingWifi()
       } else {
          Serial.println("\nNo Connected");
       }
-  }
-  
+  } 
 }
 
 int testWifi(void) 
