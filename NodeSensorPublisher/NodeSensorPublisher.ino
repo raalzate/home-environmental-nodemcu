@@ -12,7 +12,7 @@ void loop() {
    if(inode.isInterrupt()) {
       inode.handleClient(); 
    } else {
-     if (!client.connected()) {
+     if (!inode.isConnected()) {
        inode.reconnect();
      }
      Serial.flush();
@@ -20,7 +20,7 @@ void loop() {
         String data = Serial.readStringUntil('\n');
         inode.publish(data);
      }
-     client.loop();
+     inode.loop();
    }
 }
 

@@ -26,7 +26,7 @@ bool INodeUH::isInterrupt(void)
 
 void INodeUH::handleClient()
 {
-	 inode.handleClient(); 
+	 server.handleClient(); 
 }
 
 void INodeUH::reconnect()
@@ -59,32 +59,41 @@ void INodeUH::publish(String data)
    sleppOutput();
 }
 
+void INodeUH::loop()
+{
+  client.loop();
+}
 
-void publishRegister()
+bool INodeUH::isConnected()
+{
+  return client.connected();
+}
+
+void INodeUH::publishRegister()
 {
   client.publish("register",_nameNode.c_str(), true);
 }
 
-void sleepIntro()
+void INodeUH::sleepIntro()
 {
   digitalWrite(LED_STATUS_SEND, HIGH);
   delay(10);
 }
 
-void sleppOutput()
+void INodeUH::sleppOutput()
 {
   delay(600);
   digitalWrite(LED_STATUS_SEND, LOW);
 }
 
-void settingPinMode()
+void INodeUH::settingPinMode()
 {
   pinMode(LED_STATUS_SEND, OUTPUT);
   pinMode(LED_STATUS_OUTSERVICE, OUTPUT);
   pinMode(LED_STATUS_INSERVICE, OUTPUT);
 }
 
-void settingWifi()
+void INodeUH::settingWifi()
 {
 
   client.setServer(MQTT_SERVER, 1883);
@@ -107,7 +116,7 @@ void settingWifi()
 
 }
 
-int isValidWifi(void) 
+int INodeUH::isValidWifi() 
 {
   int c = 0;
   Serial.println("Waiting for Wifi to connect");  
@@ -123,7 +132,7 @@ int isValidWifi(void)
   return(10);
 } 
 
-void findSsidAndPassword()
+void INodeUH::findSsidAndPassword()
 {
 
   EEPROM.begin(512);
@@ -138,20 +147,20 @@ void findSsidAndPassword()
 
 
 
-void settingAccessPoint()
+void INodeUH::settingAccessPoint()
 {
 
   WiFi.softAP(AP_SSID, AP_PASSWORD);
   IPAddress myIP = WiFi.softAPIP();
   Serial.print("AP IP address: ");
   Serial.println(myIP);
-  server.on("/", handleRegisterAuthWiFi);
+  server.on("/", std::bind(&INodeUH::handleRegisterAuthWiFi, this));
   server.begin();
   Serial.println("HTTP server started");
 }
 
 
-void cleanDataWifi()
+void INodeUH::cleanDataWifi()
 {
    EEPROM.begin(512);
    Serial.println("Clearing eeprom");
@@ -160,7 +169,7 @@ void cleanDataWifi()
    EEPROM.end();
 }
 
-void saveWifiAndTopic(String ssid,  String password)
+void INodeUH::saveWifiAndTopic(String ssid,  String password)
 {
   EEPROM.begin(512);  
   for (int i = 0; i < ssid.length(); ++i){ 
@@ -175,7 +184,7 @@ void saveWifiAndTopic(String ssid,  String password)
   EEPROM.end(); 
 }
 
-void handleRegisterAuthWiFi() {
+void INodeUH::handleRegisterAuthWiFi() {
 
   String argSSID     = server.arg("ssid");
   String argPassword = server.arg("password");
