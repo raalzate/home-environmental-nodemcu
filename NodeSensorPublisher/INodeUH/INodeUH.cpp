@@ -1,3 +1,32 @@
+/*
+||
+|| @file INodeUH.cpp
+|| @version 1.0 Beta
+|| @author Raul .A Alzate
+|| @contact alzategomez.raul@gmail.com
+||
+|| @description
+|| | Implemementaccion que permite una facil configuracion del nodomcu/esp8266
+|| #
+||
+|| @license
+|| | This library is free software; you can redistribute it and/or
+|| | modify it under the terms of the GNU Lesser General Public
+|| | License as published by the Free Software Foundation; version
+|| | 2.1 of the License.
+|| |
+|| | This library is distributed in the hope that it will be useful,
+|| | but WITHOUT ANY WARRANTY; without even the implied warranty of
+|| | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+|| | Lesser General Public License for more details.
+|| |
+|| | You should have received a copy of the GNU Lesser General Public
+|| | License along with this library; if not, write to the Free Software
+|| | Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+|| #
+||
+*/
+
 #include "INodeUH.h"
 
 
@@ -5,16 +34,23 @@ WiFiClient       espClient;
 ESP8266WebServer server(80);
 PubSubClient     client(espClient);
 
+const byte HASH_SIZE = 5; 
+HashType<char*,double> hashRawArray[HASH_SIZE]; 
+HashMap<char*,double> dataSensors = HashMap<char*,double>( hashRawArray , HASH_SIZE ); 
+
+
 INodeUH::INodeUH(String nameNode)
 {
 	_nameNode = nameNode;
+	_indexSensors = 0;
 }
 
 void INodeUH::setup()
 {
   delay(1000);
   Serial.begin(9600);
-
+  
+  cleanDataWifi();
   settingPinMode();
   settingWifi();
 }
@@ -40,7 +76,6 @@ void INodeUH::reconnect()
         digitalWrite(LED_STATUS_INSERVICE, HIGH);
         publishRegister();
         delay(1000); 
-        Serial.swap();
      } else {
         digitalWrite(LED_STATUS_OUTSERVICE, HIGH);
         digitalWrite(LED_STATUS_INSERVICE, LOW);
@@ -52,11 +87,34 @@ void INodeUH::reconnect()
    }
 }
 
-void INodeUH::publish(String data)
+void INodeUH::addDataToSensor(char* sensor, double data){
+	dataSensors[_indexSensors](sensor, data);
+	_indexSensors++;
+}
+
+void INodeUH::publishData()
 {
    sleepIntro();
+   String data = getData();
+   Serial.print("\nThe data is send with this info => ");
+   Serial.println(data);
    client.publish(_nameNode.c_str(),data.c_str(), true);
    sleppOutput();
+}
+
+String INodeUH::getData()
+{
+   String data = "";
+   char buffer [50];     
+   for (byte i=0; i<_indexSensors; i++){
+	String coma = ",";  
+	if(i == _indexSensors-1){
+		coma = "";
+	}	
+	data += sprintf (buffer, "{\"%s\":\"%s\"}", dataSensors[i].getHash(), dataSensors[i].getValue()) + coma;
+   }
+   data = "{["+data+"]}";
+   return data;
 }
 
 void INodeUH::loop()
@@ -72,6 +130,8 @@ bool INodeUH::isConnected()
 void INodeUH::publishRegister()
 {
   client.publish("register",_nameNode.c_str(), true);
+  Serial.print("\nThe node is registered correctly => ");
+  Serial.println(_nameNode);
 }
 
 void INodeUH::sleepIntro()
@@ -99,7 +159,12 @@ void INodeUH::settingWifi()
   client.setServer(MQTT_SERVER, 1883);
   Serial.println("\nStartup");  
   findSsidAndPassword();
-  if (_essid.length() > 1 ) {
+  if (_essid.length() > 3 ) {
+	  Serial.print("_essid.length() => ");
+	  Serial.print(_essid.length());
+	  Serial.print(" -- ");
+	  Serial.print(_essid.c_str());
+
       WiFi.begin(_essid.c_str(), _epass.c_str());
       if (isValidWifi() == 20 ) { 
          Serial.print("\nConnected WIFI.");
@@ -154,7 +219,7 @@ void INodeUH::settingAccessPoint()
   IPAddress myIP = WiFi.softAPIP();
   Serial.print("AP IP address: ");
   Serial.println(myIP);
-  server.on("/", std::bind(&INodeUH::handleRegisterAuthWiFi, this));
+  server.on("/settingWifi", std::bind(&INodeUH::handleRegisterAuthWiFi, this));
   server.begin();
   Serial.println("HTTP server started");
 }
@@ -163,8 +228,8 @@ void INodeUH::settingAccessPoint()
 void INodeUH::cleanDataWifi()
 {
    EEPROM.begin(512);
-   Serial.println("Clearing eeprom");
-   for (int i = 0; i < 68; ++i) { EEPROM.write(i, 0); }
+   Serial.println("\n*** Clearing eeprom");
+   for (int i = 0; i < 68; ++i) { EEPROM.write(i, -1); }
    EEPROM.commit(); 
    EEPROM.end();
 }
@@ -184,19 +249,26 @@ void INodeUH::saveWifiAndTopic(String ssid,  String password)
   EEPROM.end(); 
 }
 
-void INodeUH::handleRegisterAuthWiFi() {
+void INodeUH::handleRegisterAuthWiFi() 
+{
 
   String argSSID     = server.arg("ssid");
   String argPassword = server.arg("password");
-  String reqJson     = "{'status':'success', 'ssid': '"+argSSID+"', 'password': '"+argPassword+"'}";
-  cleanDataWifi();
-  saveWifiAndTopic(argSSID,argPassword);
-  
-  server.send(200, "application/json",  reqJson);
-  
-  WiFi.disconnect();
-  delay(1000);
-  ESP.restart();
+ 
+   WiFi.begin(argSSID.c_str(), argPassword.c_str());
+   if (isValidWifi() == 20 ) { 
+       cleanDataWifi();
+       saveWifiAndTopic(argSSID,argPassword);
+       String reqJson = "{'status':'success','ssid': '"+argSSID+"', 'password': '"+argPassword+"'}";
+	   server.send(200, "application/json",  reqJson);
+       WiFi.disconnect();
+       delay(1000);
+       ESP.restart();
+   } else {
+       String reqJson = "{'status':'not connect', 'ssid': '"+argSSID+"', 'password': '"+argPassword+"'}";
+	   server.send(204, "application/json",  reqJson);
+   }
+	 
 }
 
 

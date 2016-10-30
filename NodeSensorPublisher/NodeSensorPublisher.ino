@@ -15,10 +15,11 @@ void loop() {
      if (!inode.isConnected()) {
        inode.reconnect();
      }
-     Serial.flush();
      if (Serial.available() > 0) {
         String data = Serial.readStringUntil('\n');
-        inode.publish(data);
+        inode.addDataToSensor("temperatura", 20);
+        inode.addDataToSensor("humedad", 15);
+        inode.publishData();
      }
      inode.loop();
    }
