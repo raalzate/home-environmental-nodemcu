@@ -26,7 +26,7 @@ utilizamos la APK para configurar nuestro nodemcu, debemos descargar aquí:
 
 ## Ejemplo
 
-´´
+```c++
 #include "INodeUH/INodeUH.h"
 
 INodeUH inode("temperatura");//nombre del nodo
@@ -53,7 +53,8 @@ void loop() {
      inode.loop();
    }
 }
-´´
+```
+
 ## Diagrama de flujo setup
 ![Diagrama de flujo setup](https://raw.githubusercontent.com/raalzate/home-environmental-nodemcu/master/asserts/img_setup.png)
 
