@@ -48,7 +48,7 @@ class INodeUH
 	* Contructor permite incializar el nodo
 	* @param nameNode: nombre del nodo
 	*/
-	public: INodeUH(String nameNode);
+	public: INodeUH(String nameNode, String sensors);
 
 	/*
 	* Permite realizar la configuraciones previas antes de ejecutar el programa
@@ -109,6 +109,7 @@ class INodeUH
 	private: String _nameNode;
 	private: bool _interrupt;
 	private: int _indexSensors;
+	private: String _sensors;
 	
 };
 

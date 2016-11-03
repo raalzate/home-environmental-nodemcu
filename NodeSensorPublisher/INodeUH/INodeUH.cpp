@@ -38,11 +38,11 @@ const byte HASH_SIZE = 5;
 HashType<char*,double> hashRawArray[HASH_SIZE]; 
 HashMap<char*,double> dataSensors = HashMap<char*,double>( hashRawArray , HASH_SIZE ); 
 
-
-INodeUH::INodeUH(String nameNode)
+INodeUH::INodeUH(String nameNode, String sensors)
 {
 	_nameNode = nameNode;
 	_indexSensors = 0;
+  _sensors = sensors;
 }
 
 void INodeUH::setup()
@@ -104,13 +104,11 @@ void INodeUH::publishData()
 String INodeUH::getData()
 {
    String data = "";
-   char buffer [50];     
+   char buffer [75];     
    for (byte i=0; i<_indexSensors; i++){
-	String coma = ",";  
-	if(i == _indexSensors-1){
-		coma = "";
-	}	
-	data += sprintf (buffer, "{\"%s\":\"%s\"}", dataSensors[i].getHash(), dataSensors[i].getValue()) + coma;
+    	String coma = ",";  
+    	if(i == _indexSensors-1){coma = "";}	
+    	data += sprintf (buffer, "{\"%s\":\"%s\"}", dataSensors[i].getHash(), dataSensors[i].getValue()) + coma;
    }
    data = "{["+data+"]}";
    return data;
@@ -128,9 +126,10 @@ bool INodeUH::isConnected()
 
 void INodeUH::publishRegister()
 {
-  client.publish("register",_nameNode.c_str(), true);
+  String data = "{\"name\":\""+_nameNode+"\", \"sensors\":\""+_sensors+"\"}";
+  client.publish("register",data.c_str(), true);
   Serial.print("\nThe node is registered correctly => ");
-  Serial.println(_nameNode);
+  Serial.println(data);
 }
 
 void INodeUH::sleepIntro()
@@ -159,11 +158,6 @@ void INodeUH::settingWifi()
   Serial.println("\nStartup");  
   findSsidAndPassword();
   if (_essid.length() > 3 ) {
-	  Serial.print("_essid.length() => ");
-	  Serial.print(_essid.length());
-	  Serial.print(" -- ");
-	  Serial.print(_essid.c_str());
-
       WiFi.begin(_essid.c_str(), _epass.c_str());
       if (isValidWifi() == 20 ) { 
          Serial.print("\nConnected WIFI.");

@@ -1,7 +1,7 @@
 
 #include "INodeUH/INodeUH.h";
 
-INodeUH inode("node001-clima");
+INodeUH inode("node001-clima", "temperatura,humedad,calidad");
 
 void setup() {
   inode.setup();
