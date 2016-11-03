@@ -1,7 +1,7 @@
 
-#include "INodeUH/INodeUH.h"
+#include "INodeUH/INodeUH.h";
 
-INodeUH inode("temperatura");
+INodeUH inode("node001-clima");
 
 void setup() {
   inode.setup();
@@ -9,19 +9,34 @@ void setup() {
 
 void loop() {
 
-   if(inode.isInterrupt()) {
+   if(inode.isConfigurable()) {
       inode.handleClient(); 
    } else {
      if (!inode.isConnected()) {
        inode.reconnect();
      }
-     if (Serial.available() > 0) {
-        String data = Serial.readStringUntil('\n');
-        inode.addDataToSensor("temperatura", 20);
-        inode.addDataToSensor("humedad", 15);
-        inode.publishData();
-     }
+
+     delay(90000);
+     //obtener datos de los sensores
+     inode.addDataToSensor("temperatura", getSensorTemperature());
+     inode.addDataToSensor("humedad", getSensorHumedad());
+     inode.addDataToSensor("calidad", getSensorCalidad());
+     
+     inode.publishData();
+     
      inode.loop();
    }
 }
 
+
+double getSensorTemperature(){
+  return 1;
+}
+
+double getSensorHumedad(){
+  return 1;
+}
+
+double getSensorCalidad(){
+  return 1;
+}

@@ -64,7 +64,7 @@ class INodeUH
 	* Pregunta si tiene una interrupcion, 
 	* el cual indica que esta o no configurado por completo el nodo
 	*/
-	bool isInterrupt(void);
+	bool isConfigurable(void);
 
 	/*
 	* Pregunta si esta conectado 

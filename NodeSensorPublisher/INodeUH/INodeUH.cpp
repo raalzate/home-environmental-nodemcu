@@ -50,12 +50,11 @@ void INodeUH::setup()
   delay(1000);
   Serial.begin(9600);
   
-  cleanDataWifi();
   settingPinMode();
   settingWifi();
 }
 
-bool INodeUH::isInterrupt(void)
+bool INodeUH::isConfigurable(void)
 {
  	return _interrupt;
 }
@@ -229,7 +228,7 @@ void INodeUH::cleanDataWifi()
 {
    EEPROM.begin(512);
    Serial.println("\n*** Clearing eeprom");
-   for (int i = 0; i < 68; ++i) { EEPROM.write(i, -1); }
+   for (int i = 0; i < 68; ++i) { EEPROM.write(i,0); }
    EEPROM.commit(); 
    EEPROM.end();
 }
@@ -255,19 +254,14 @@ void INodeUH::handleRegisterAuthWiFi()
   String argSSID     = server.arg("ssid");
   String argPassword = server.arg("password");
  
-   WiFi.begin(argSSID.c_str(), argPassword.c_str());
-   if (isValidWifi() == 20 ) { 
-       cleanDataWifi();
-       saveWifiAndTopic(argSSID,argPassword);
-       String reqJson = "{'status':'success','ssid': '"+argSSID+"', 'password': '"+argPassword+"'}";
-	   server.send(200, "application/json",  reqJson);
-       WiFi.disconnect();
-       delay(1000);
-       ESP.restart();
-   } else {
-       String reqJson = "{'status':'not connect', 'ssid': '"+argSSID+"', 'password': '"+argPassword+"'}";
-	   server.send(204, "application/json",  reqJson);
-   }
+  cleanDataWifi();
+  saveWifiAndTopic(argSSID,argPassword);
+  String reqJson = "{\"status\":\"success\",\"ssid\":\""+argSSID+"\",\"password\":\""+argPassword+"\",\"node\":\""+_nameNode+"\"}";
+  server.send(200, "application/json",  reqJson);
+  WiFi.disconnect();
+  delay(1000);
+  ESP.restart();
+ 
 	 
 }
 
