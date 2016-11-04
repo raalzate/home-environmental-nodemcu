@@ -16,10 +16,12 @@ void loop() {
        inode.reconnect();
      }
 
+     
      if (Serial.available() > 0) {
          String data = Serial.readStringUntil('\n');
          inode.addDataToSensor("temperatura", data.toFloat());
          inode.addDataToSensor("humedad", data.toFloat());
+         inode.addDataToSensor("calidad", data.toFloat());
          inode.publishData();
      }
     

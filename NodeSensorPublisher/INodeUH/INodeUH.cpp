@@ -97,20 +97,24 @@ void INodeUH::publishData()
    String data = getData();
    Serial.print("\nThe data is send with this info => ");
    Serial.println(data);
-   client.publish(_nameNode.c_str(),data.c_str(), true);
+   unsigned int length = strlen(data.c_str());
+   byte* payload = (byte*)data.c_str();
+   byte* p       = (byte*)malloc(length);
+   memcpy(p, payload, length);
+   client.publish(_nameNode.c_str(), p, length);
+   free(p);
    sleppOutput();
 }
 
 String INodeUH::getData()
 {
    String data = "";
-   char buffer [75];     
    for (byte i=0; i<_indexSensors; i++){
     	String coma = ",";  
     	if(i == _indexSensors-1){coma = "";}	
-    	data += sprintf (buffer, "{\"%s\":\"%s\"}", dataSensors[i].getHash(), dataSensors[i].getValue()) + coma;
+    	data +="{\""+String(dataSensors[i].getHash())+"\":\""+String(dataSensors[i].getValue())+"\"}" + coma;
    }
-   data = "{["+data+"]}";
+   data = "["+data+"]";
    return data;
 }
 
@@ -127,9 +131,14 @@ bool INodeUH::isConnected()
 void INodeUH::publishRegister()
 {
   String data = "{\"name\":\""+_nameNode+"\", \"sensors\":\""+_sensors+"\"}";
-  client.publish("register",data.c_str(), true);
   Serial.print("\nThe node is registered correctly => ");
   Serial.println(data);
+  unsigned int length = strlen(data.c_str());
+  byte* payload = (byte*)data.c_str();
+  byte* p       = (byte*)malloc(length);
+  memcpy(p, payload, length);
+  client.publish("register", p, length);
+  free(p);
 }
 
 void INodeUH::sleepIntro()
@@ -140,7 +149,7 @@ void INodeUH::sleepIntro()
 
 void INodeUH::sleppOutput()
 {
-  delay(600);
+  delay(1000);
   digitalWrite(LED_STATUS_SEND, LOW);
 }
 
