@@ -16,14 +16,13 @@ void loop() {
        inode.reconnect();
      }
 
-     delay(90000);
-     //obtener datos de los sensores
-     inode.addDataToSensor("temperatura", getSensorTemperature());
-     inode.addDataToSensor("humedad", getSensorHumedad());
-     inode.addDataToSensor("calidad", getSensorCalidad());
-     
-     inode.publishData();
-     
+     if (Serial.available() > 0) {
+         String data = Serial.readStringUntil('\n');
+         inode.addDataToSensor("temperatura", data.toFloat());
+         inode.addDataToSensor("humedad", data.toFloat());
+         inode.publishData();
+     }
+    
      inode.loop();
    }
 }
