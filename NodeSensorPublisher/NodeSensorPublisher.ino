@@ -1,9 +1,17 @@
 
 #include "INodeUH/INodeUH.h";
 
-INodeUH inode("node001-clima", "temperatura,humedad,calidad");
+#include <DHT.h>
+
+#define DHTPIN 12 //D6
+#define PUT_QUALITY A0
+#define DHTTYPE DHT11 
+
+INodeUH inode("node002-ambiente", "temperatura,humedad,calidad");
+DHT dht(DHTPIN, DHTTYPE);
 
 void setup() {
+   dht.begin();
   inode.setup();
 }
 
@@ -15,29 +23,35 @@ void loop() {
      if (!inode.isConnected()) {
        inode.reconnect();
      }
-
-     
-     if (Serial.available() > 0) {
-         String data = Serial.readStringUntil('\n');
-         inode.addDataToSensor("temperatura", data.toFloat());
-         inode.addDataToSensor("humedad", data.toFloat());
-         inode.addDataToSensor("calidad", data.toFloat());
-         inode.publishData();
-     }
-    
+     delay(5000);
+     inode.addDataToSensor("temperatura", getSensorTemperature());
+     inode.addDataToSensor("humedad", getSensorHumedad());
+     inode.addDataToSensor("calidad", getSensorCalidad());
+     inode.publishData();
      inode.loop();
    }
 }
 
 
-double getSensorTemperature(){
-  return 1;
+double getSensorTemperature()
+{
+  double t = dht.readTemperature();
+  if (isnan(t)) {
+      getSensorTemperature();
+  } 
+  return t;
 }
 
-double getSensorHumedad(){
-  return 1;
+double getSensorHumedad()
+{
+  double h = dht.readHumidity();
+  if (isnan(h)) {
+     getSensorHumedad();
+  }
+  return h;
 }
 
-double getSensorCalidad(){
-  return 1;
+double getSensorCalidad()
+{
+  return String(analogRead(PUT_QUALITY)).toFloat();
 }

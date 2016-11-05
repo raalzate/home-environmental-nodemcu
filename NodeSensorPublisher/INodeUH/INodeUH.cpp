@@ -34,14 +34,11 @@ WiFiClient       espClient;
 ESP8266WebServer server(80);
 PubSubClient     client(espClient);
 
-const byte HASH_SIZE = 5; 
-HashType<char*,double> hashRawArray[HASH_SIZE]; 
-HashMap<char*,double> dataSensors = HashMap<char*,double>( hashRawArray , HASH_SIZE ); 
 
 INodeUH::INodeUH(String nameNode, String sensors)
 {
-	_nameNode = nameNode;
-	_indexSensors = 0;
+  _nameNode = nameNode;
+  _indexSensors = 0;
   _sensors = sensors;
 }
 
@@ -87,35 +84,40 @@ void INodeUH::reconnect()
 }
 
 void INodeUH::addDataToSensor(char* sensor, double data){
-	dataSensors[_indexSensors](sensor, data);
+	_nameSensors[_indexSensors] = sensor;
+	_dataSensors[_indexSensors] = data;
 	_indexSensors++;
 }
+
+void INodeUH::publishRegister()
+{
+  //se realiza la publicacion del registro [register/node]	con le valor de los sensores
+  String topic = "register/"+_nameNode;
+  Serial.print("\nThe node is registered correctly => ");
+  Serial.print(topic);
+  Serial.print(" : ");
+  Serial.println(_sensors);
+  client.publish("register", _nameNode.c_str(), false);//<-- TODO: lo tiene que hacer la app
+  client.publish(topic.c_str(), _sensors.c_str(), false);
+}
+
 
 void INodeUH::publishData()
 {
    sleepIntro();
-   String data = getData();
-   Serial.print("\nThe data is send with this info => ");
-   Serial.println(data);
-   unsigned int length = strlen(data.c_str());
-   byte* payload = (byte*)data.c_str();
-   byte* p       = (byte*)malloc(length);
-   memcpy(p, payload, length);
-   client.publish(_nameNode.c_str(), p, length);
-   free(p);
-   sleppOutput();
-}
-
-String INodeUH::getData()
-{
-   String data = "";
+   //se consulta todos los sensores para realiza la publicacion al [node/sensor]
+   Serial.println();
    for (byte i=0; i<_indexSensors; i++){
-    	String coma = ",";  
-    	if(i == _indexSensors-1){coma = "";}	
-    	data +="{\""+String(dataSensors[i].getHash())+"\":\""+String(dataSensors[i].getValue())+"\"}" + coma;
+		String topic = _nameNode+"/"+_nameSensors[i];
+		String data = String(_dataSensors[i]);
+		Serial.print("-- The data is send with this info => ");
+		Serial.print(topic);
+		Serial.print(" : ");
+		Serial.println(data);
+		client.publish(topic.c_str(), data.c_str());
    }
-   data = "["+data+"]";
-   return data;
+   _indexSensors = 0;
+   sleppOutput();
 }
 
 void INodeUH::loop()
@@ -128,18 +130,6 @@ bool INodeUH::isConnected()
   return client.connected();
 }
 
-void INodeUH::publishRegister()
-{
-  String data = "{\"name\":\""+_nameNode+"\", \"sensors\":\""+_sensors+"\"}";
-  Serial.print("\nThe node is registered correctly => ");
-  Serial.println(data);
-  unsigned int length = strlen(data.c_str());
-  byte* payload = (byte*)data.c_str();
-  byte* p       = (byte*)malloc(length);
-  memcpy(p, payload, length);
-  client.publish("register", p, length);
-  free(p);
-}
 
 void INodeUH::sleepIntro()
 {

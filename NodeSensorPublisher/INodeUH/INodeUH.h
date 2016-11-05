@@ -38,7 +38,6 @@
 #include <WiFiClient.h> 
 #include <ESP8266WebServer.h>
 
-#include "HashMap.h"
 #include "IConstants.h"
 
 class INodeUH
@@ -98,7 +97,6 @@ class INodeUH
 	private: void sleepIntro();
 	private: void sleppOutput();
 	private: int isValidWifi();
-	private: String getData();
 	private: void findSsidAndPassword();
 	private: void settingAccessPoint();
 	private: void saveWifiAndTopic(String ssid,  String password);
@@ -110,6 +108,8 @@ class INodeUH
 	private: bool _interrupt;
 	private: int _indexSensors;
 	private: String _sensors;
+	private: char* _nameSensors[5];
+	private: double _dataSensors[5];
 	
 };
 
