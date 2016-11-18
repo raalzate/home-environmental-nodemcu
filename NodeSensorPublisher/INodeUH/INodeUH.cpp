@@ -66,7 +66,7 @@ void INodeUH::reconnect()
    Serial.println("\nServer MQTT Connecting..");
    while (!client.connected()) {
      Serial.print(".");
-     if (client.connect("ESP8266 Client")) {
+     if (client.connect(_nameNode.c_str())) {
         Serial.println(" Connected MQTT!");
         digitalWrite(LED_STATUS_OUTSERVICE, LOW);
         digitalWrite(LED_STATUS_INSERVICE, HIGH);
@@ -193,10 +193,10 @@ void INodeUH::findSsidAndPassword()
 {
 
   EEPROM.begin(512);
-  for (int i = 0; i < 16; ++i){
+  for (int i = 0; i < 32; ++i){
     _essid+=char(EEPROM.read(i));    
   }
-  for (int i = 16; i < 42; ++i){
+  for (int i = 32; i < 62; ++i){
     _epass+=char(EEPROM.read(i));
   }
   EEPROM.end();
@@ -233,7 +233,7 @@ void INodeUH::saveWifiAndTopic(String ssid,  String password)
     EEPROM.write(i, ssid[i]);
   }
   for (int i = 0; i < password.length(); ++i){
-    EEPROM.write(16+i, password[i]);
+    EEPROM.write(32+i, password[i]);
   }
 
   Serial.println("Save OK"); 
