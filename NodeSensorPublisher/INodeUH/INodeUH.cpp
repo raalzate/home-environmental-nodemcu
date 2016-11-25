@@ -53,10 +53,10 @@ void INodeUH::setup()
 
 bool INodeUH::isConfigurable(void)
 {
- 	return _interrupt;
+ 	return !_interrupt;
 }
 
-void INodeUH::handleClient()
+void INodeUH::handleServerAP()
 {
 	 server.handleClient(); 
 }

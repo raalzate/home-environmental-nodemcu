@@ -73,7 +73,7 @@ class INodeUH
 	/*
 	* Funcion cliente para el manejo de configuracion rest/client
 	*/
-	void handleClient();
+	void handleServerAP();
 
 	/*
 	* Publica la data asociada a los sensores
