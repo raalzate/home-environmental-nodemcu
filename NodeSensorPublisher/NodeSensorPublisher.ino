@@ -17,8 +17,8 @@ void setup() {
 
 void loop() {
 
-   if(inode.isConfigurable()) {
-      inode.handleClient(); 
+   if(!inode.isConfigurable()) {
+      inode.handleServerAP(); 
    } else {
      if (!inode.isConnected()) {
        inode.reconnect();

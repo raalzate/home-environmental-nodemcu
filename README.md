@@ -29,7 +29,7 @@ utilizamos la APK para configurar nuestro nodemcu, debemos descargar aquí:
 ```c++
 #include "INodeUH/INodeUH.h"
 
-INodeUH inode("temperatura");//nombre del nodo
+INodeUH inode("node002-ambiente", "temperatura,humedad,calidad");//nombre del nodo y tags para los sensores
 
 void setup() {
   inode.setup();
@@ -37,17 +37,17 @@ void setup() {
 
 void loop() {
 
-   if(inode.isInterrupt()) { // si aun no se ha configurado
-      inode.handleClient(); 
+   if(!inode.isConfigurable()) { // si aun no se ha configurado
+      inode.handleServerAP(); 
    } else {
      if (!inode.isConnected()) {//se intenta reconectar si no esta conectado
        inode.reconnect();
      }
      //este nodo tiene dos sensores
-	 inode.addDataToSensor("temperatura", 20); //agrega el valor para el sensor de temperatura
+	   inode.addDataToSensor("temperatura", 20); //agrega el valor para el sensor de temperatura
      inode.addDataToSensor("humedad", 15);//agrega el valor para el sensor de humedad
 	 
-	 //envia todos los datos de cada sensor, realizado una publicacion 
+	   //envia todos los datos de cada sensor, realizado una publicacion 
      inode.publishData();
      
      inode.loop();
@@ -55,9 +55,7 @@ void loop() {
 }
 ```
 
-## Diagrama de flujo setup
-![Diagrama de flujo setup](https://raw.githubusercontent.com/raalzate/home-environmental-nodemcu/master/asserts/img_setup.png)
+## Diagrama de flujo de la configuración
+![Diagrama de flujo](https://raw.githubusercontent.com/raalzate/home-environmental-nodemcu/master/asserts/img_config.png)
 
-## Diagrama de flujo loop
-![Diagrama de flujo setup](https://raw.githubusercontent.com/raalzate/home-environmental-nodemcu/master/asserts/img_loop.png)
 
