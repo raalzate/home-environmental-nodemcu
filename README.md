@@ -8,6 +8,14 @@ Para poder realizar el censo de los datos ambientales se realiza un pequeño cli
 Para mas indicaciones de la libreria del nodemcu para arduino ingresa aquí: [Quick Start to Nodemcu (ESP8266) on Arduino IDE](http://www.instructables.com/id/Quick-Start-to-Nodemcu-ESP8266-on-Arduino-IDE/).
 
 
+## Como usarlo
+
+1. Comprima la carpeta "INodeUH" en un .ZIP
+2. Importe la librería a tu Arduino: Arduino => Sketch => Include Library => Add .ZIP Library...
+3. Abra la el sensor Ambiental: Arduino => File => Examples => INodeUH => Sensor => NodeEnvironmentalSensor
+4. Conecte un NodeMCU a su Arduino.
+5. Abra el Serial Window del Arduino IDE.
+
 ## Configuración
 Cuando tengamos todo instalado en nuestro PC debemos quemar el Software utilizando el IDE de Arduino, 
 utilizamos la APK para configurar nuestro nodemcu, debemos descargar aquí:
@@ -19,10 +27,12 @@ utilizamos la APK para configurar nuestro nodemcu, debemos descargar aquí:
 
 **Nota:** El sistema se conecta a un servidor local/remoto con una ip estática, que sería nuestro sistema Raspberry u otro configurado con el proyecto: [Home Environmental](https://github.com/raalzate/home-environmental) trabajado con nodejs.
 
+
+
 ## Ejemplo
 
 ```c++
-#include "INodeUH/INodeUH.h"
+#include <INodeUH.h>
 
 INodeUH inode("node002-ambiente", "temperatura,humedad,calidad");//nombre del nodo y tags para los sensores
 
